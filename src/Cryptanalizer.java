@@ -1,3 +1,4 @@
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Scanner;
@@ -43,6 +44,8 @@ public class Cryptanalizer {
         }
 
         System.out.println("Шифруем содержимое исходного файла в \n" + outputFilePath.toString());
+        String result = encryptorDecryptor(inputFilePath, outputFilePath, k, 0);
+        System.out.println(result);
     }
 
     //method decrypts entered file to output file with key
@@ -78,6 +81,39 @@ public class Cryptanalizer {
     //encryption algorithm
     //int method = 0 for encryption, = 1 for decryption
     public static String encryptorDecryptor(Path inputFile, Path outputFile, int key, int method) {
+        //creates reader/writer for encrypt/decrypt chars with algorithm
+        try (Reader reader = new BufferedReader(
+                            new InputStreamReader(
+                            new FileInputStream(inputFile.toString()), "UTF-8"));
+            Writer writer = new BufferedWriter(
+                            new OutputStreamWriter(
+                            new FileOutputStream(outputFile.toString()), "UTF-8"))) {
+            int charOffset = 0;                             //char at new position with entered key
+            //cycle reads one char per round
+            while (reader.ready()) {
+                char ch = (char) reader.read();             //char to resolve with algorithm key
+                if (ALPHABET.indexOf(Character.toLowerCase(ch)) != -1) {
+                    charOffset = ALPHABET.indexOf(Character.toLowerCase(ch)) + key;
+                    if (charOffset > ALPHABET.length()) {
+                        if (Character.isUpperCase(ch)) {
+                            writer.write(Character.toUpperCase(ALPHABET.charAt(charOffset % ALPHABET.length())));
+                        } else {
+                            writer.write(ALPHABET.charAt(charOffset % ALPHABET.length()));
+                        }
+                    } else {
+                        if (Character.isUpperCase(ch)) {
+                            writer.write(Character.toUpperCase(ALPHABET.charAt(charOffset)));
+                        } else {
+                            writer.write(ALPHABET.charAt(charOffset));
+                        }
+                    }
+                } else {
+                    writer.write(ch);
+                }
+            }
+        } catch (Exception e) {
+
+        }
         return null;
     }
 }
