@@ -3,9 +3,17 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Scanner;
 
+/**
+ * Cryptanalizer
+ * Converts text from the ALPHABET by Caesar's cipher.
+ *
+ * @author Tsebal
+ * @since 0.1b
+ */
+
 public class Cryptanalizer {
     private static final String INCORRECT_PATH_MSG = "Некорректный путь к файлу, введите корректный путь:";
-    private static final String ALPHABET = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя.,\":-!? ";
+    public static final String ALPHABET = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя.,\":-!? ";
 
     public static void main(String[] args) {
         System.out.println("Добро пожаловать в криптоанализатор!\nРабота производится с шифром Цезаря.\n" +
@@ -33,6 +41,30 @@ public class Cryptanalizer {
         System.out.println("Введите полный путь к файлу для вывода результатов шифрования: ");
         Path outputFilePath = pathResolver("output");
 
+        int k = getSecretKey();
+
+        System.out.println("Шифруем содержимое исходного файла в \n" + outputFilePath.toString());
+        String result = encryptorDecryptor(inputFilePath, outputFilePath, k, 0);
+        System.out.println(result);
+    }
+
+    //method decrypts entered file to output file with key
+    private static void decrypt() {
+        System.out.println("Введите полный путь к файлу для расшифровки: ");
+        Path inputFilePath = pathResolver("input");
+
+        System.out.println("Введите полный путь к файлу для вывода результатов расшифровки: ");
+        Path outputFilePath = pathResolver("output");
+
+        int k = getSecretKey();
+
+        System.out.println("Расшифровываем содержимое исходного файла в \n" + outputFilePath.toString());
+        String result = encryptorDecryptor(inputFilePath, outputFilePath, k, 1);
+        System.out.println(result);
+    }
+
+    //gets secret algorithm key from console
+    private static int getSecretKey() {
         System.out.println("Введите ключ шифрования (целое положительное число): ");
         int k = -1;                                             //algorithm key
         while (k == -1) {
@@ -42,19 +74,15 @@ public class Cryptanalizer {
                 System.out.println("Введите корректные данные.");
             }
         }
-
-        System.out.println("Шифруем содержимое исходного файла в \n" + outputFilePath.toString());
-        String result = encryptorDecryptor(inputFilePath, outputFilePath, k, 0);
-        System.out.println(result);
+        return k;
     }
 
-    //method decrypts entered file to output file with key
-    private static void decrypt() {
-        System.out.println("Тут будем расшифровывать текст.");
-    }
-
-    //method checks if the entered filePath is correct
-    //String direction = input if inputFile, = output if outputFile
+    /**
+     * Method checks if the entered filePath is correct and creates new output file if not exist
+     *
+     * @param direction = input if inputFile,
+     *                  = output if outputFile
+     */
     public static Path pathResolver(String direction) {
         Path filePath = null;
         try {
@@ -78,27 +106,45 @@ public class Cryptanalizer {
         return filePath;
     }
 
-    //encryption algorithm
-    //int method = 0 for encryption, = 1 for decryption
+    /**
+     * Encryption/decryption algorithm
+     *
+     * @param method = 0 for encryption,
+     *               = 1 for decryption
+     */
     public static String encryptorDecryptor(Path inputFile, Path outputFile, int key, int method) {
         //creates reader/writer for encrypt/decrypt chars with algorithm
         try (Reader reader = new BufferedReader(
-                            new InputStreamReader(
-                            new FileInputStream(inputFile.toString()), "UTF-8"));
-            Writer writer = new BufferedWriter(
-                            new OutputStreamWriter(
-                            new FileOutputStream(outputFile.toString()), "UTF-8"))) {
+                new InputStreamReader(
+                        new FileInputStream(inputFile.toString()), "UTF-8"));
+             Writer writer = new BufferedWriter(
+                     new OutputStreamWriter(
+                             new FileOutputStream(outputFile.toString()), "UTF-8"))) {
             int charOffset = 0;                             //char at new position with entered key
+
             //cycle reads one char per round
             while (reader.ready()) {
                 char ch = (char) reader.read();             //char to resolve with algorithm key
                 if (ALPHABET.indexOf(Character.toLowerCase(ch)) != -1) {
-                    charOffset = ALPHABET.indexOf(Character.toLowerCase(ch)) + key;
-                    if (charOffset > ALPHABET.length()) {
+                    //method choice encryption/decryption (ALPHABET offset)
+                    if (method == 0) {
+                        charOffset = ALPHABET.indexOf(Character.toLowerCase(ch)) + key;
+                    } else {
+                        charOffset = ALPHABET.indexOf(Character.toLowerCase(ch)) - key;
+                    }
+                    //encryption way from stream
+                    if (charOffset >= ALPHABET.length()) {
                         if (Character.isUpperCase(ch)) {
                             writer.write(Character.toUpperCase(ALPHABET.charAt(charOffset % ALPHABET.length())));
                         } else {
                             writer.write(ALPHABET.charAt(charOffset % ALPHABET.length()));
+                        }
+                        //decryption way from stream
+                    } else if (charOffset < 0) {
+                        if (Character.isUpperCase(ch)) {
+                            writer.write(Character.toUpperCase(ALPHABET.charAt(ALPHABET.length() - Math.abs(charOffset % ALPHABET.length()))));
+                        } else {
+                            writer.write(ALPHABET.charAt(ALPHABET.length() - Math.abs(charOffset % ALPHABET.length())));
                         }
                     } else {
                         if (Character.isUpperCase(ch)) {
@@ -112,8 +158,8 @@ public class Cryptanalizer {
                 }
             }
         } catch (Exception e) {
-
+            e.printStackTrace();
         }
-        return null;
+        return "Операция прошла успешно.";
     }
 }
