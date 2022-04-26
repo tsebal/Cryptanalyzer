@@ -181,6 +181,6 @@ public class Cryptanalizer {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return "Операция выполнена успешно.";
+        return "Operation successfully completed.\n The result is saved in " + outputFile.toString();
     }
 }
