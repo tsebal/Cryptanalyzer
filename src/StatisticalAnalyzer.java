@@ -8,20 +8,29 @@ import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-public class StatisticalAnalyzer {
-    public static final String ALPHABET = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя.,\":-!? ".toUpperCase();
-    private static Path inputFilePath;
-    private static Map<Character, Integer> charStatMap = new HashMap<>();
+/**
+ * Searches the cipher key by the number of repetitions of frequently used letters
+ * in the presented alphabet
+ */
 
-    public static void main(String[] args) throws IOException {
-        inputFilePath = Paths.get("C:\\test\\file1.txt");
+public class StatisticalAnalyzer {
+    private String alphabet;
+    private Path inputFilePath;
+    private Map<Character, Integer> charStatMap = new HashMap<>();
+
+    public StatisticalAnalyzer(Path inputFilePath, String alphabet) {
+        this.alphabet = alphabet.toUpperCase();
+        this.inputFilePath = inputFilePath;
+    }
+
+    public void analyzeText() throws IOException {
         //reads encrypted text from the file to string
         byte[] encryptedFileContent = Files.readAllBytes(Paths.get(inputFilePath.toString()));
         String encryptedText = new String(encryptedFileContent, StandardCharsets.UTF_8);
 
         //load alphabet to charStatMap for compare next
-        for (int i = 0; i < ALPHABET.length(); i++) {
-            charStatMap.put(ALPHABET.charAt(i), 0);
+        for (int i = 0; i < alphabet.length(); i++) {
+            charStatMap.put(alphabet.charAt(i), 0);
         }
 
         //load statistics for each character of the encrypted text
@@ -36,6 +45,7 @@ public class StatisticalAnalyzer {
             }
         }
 
+        //Sorts the map to find the most recurring character in the encrypted text
         SortedSet<Character> keys = new TreeSet<>(charStatMap.keySet());
         int charMaxCount = 0;
         char keyChar = 0;
@@ -46,26 +56,32 @@ public class StatisticalAnalyzer {
                 keyChar = key;
             }
         }
-        System.out.println(keyChar + " = " + charMaxCount);
 
         System.out.println(findKey(keyChar, ' '));
         System.out.println(findKey(keyChar, 'А'));
         System.out.println(findKey(keyChar, 'О'));
         System.out.println(findKey(keyChar, 'Е'));
         System.out.println(findKey(keyChar, 'И'));
-
-        for (var entry : charStatMap.entrySet()) {
-            System.out.println(entry);
-        }
     }
 
-    //correct work of algo to find real key needed
-    public static int findKey(char keyChar, char keyRealChar) {
+    /**
+     * Searches the key by the number of repetitions of frequently used letters
+     * in the presented alphabet.
+     * @param keyChar max frequently used letter in encrypted text
+     * @param keyRealChar max frequently used letter in the presented alphabet
+     */
+    private int findKey(char keyChar, char keyRealChar) {
         int cipherKey = 0;
-        if (ALPHABET.indexOf(keyRealChar) >= ALPHABET.indexOf(keyChar)) {
-            cipherKey = Math.abs(ALPHABET.length() - (ALPHABET.indexOf(keyRealChar) - ALPHABET.indexOf(keyChar)));
+        int keyCharIndex = alphabet.indexOf(keyChar);           //index of encrypted char in alphabet
+        int keyRealCharIndex = alphabet.indexOf(keyRealChar);   //index of plain char in alphabet
+        //if last character in alphabet is a key
+        if (keyRealCharIndex == alphabet.length() - 1) {
+            cipherKey = alphabet.length() - keyRealCharIndex + keyCharIndex;
+        } else if (keyRealCharIndex >= keyCharIndex) {
+            cipherKey = Math.abs(alphabet.length() - (keyRealCharIndex - keyCharIndex) + 1);
+            //if first character in alphabet is a key
         } else {
-            cipherKey = Math.abs(ALPHABET.indexOf(keyRealChar) - ALPHABET.indexOf(keyChar));
+            cipherKey = Math.abs(keyRealCharIndex - keyCharIndex);
         }
         return cipherKey;
     }

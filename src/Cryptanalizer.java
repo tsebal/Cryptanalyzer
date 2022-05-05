@@ -9,7 +9,7 @@ import java.util.Scanner;
  * Selects an encryption key for the encrypted text based on the provided ALPHABET.
  *
  * @author Tsebal
- * @since 0.11b
+ * @since 0.12b
  */
 
 public class Cryptanalizer {
@@ -27,14 +27,16 @@ public class Cryptanalizer {
                         "1) Шифровать текст\n" +
                         "2) Дешифровать текст\n" +
                         "3) Подбор ключа шифрования к зашифрованному тексту (brute force)\n" +
-                        "4) Выход");
+                        "4) Подбор ключа шифрования статистическим анализом текста\n" +
+                        "5) Выход");
 
                 int menuChoice = scanner.nextInt();
                 switch (menuChoice) {
                     case 1 -> encrypt();
                     case 2 -> decrypt();
                     case 3 -> bruteForce();
-                    case 4 -> System.exit(0);
+                    case 4 -> statisticalAnalysis();
+                    case 5 -> System.exit(0);
                     default -> System.out.println("Вы сделали некорректный выбор.");
                 }
             }
@@ -82,6 +84,17 @@ public class Cryptanalizer {
         System.out.println("Подбираем ключ, ждите...");
         BruteForceCipher bruteForceCipher = new BruteForceCipher(inputFilePath, ALPHABET);
         bruteForceCipher.findKey();
+    }
+
+    //Searches the key by the number of repetitions of frequently used letters in the presented alphabet
+    private static void statisticalAnalysis() throws IOException {
+        System.out.println("Введите полный путь к зашифрованному файлу для анализа текста" +
+                " и подбора ключа шифрования: ");
+        Path inputFilePath = pathResolver("input");
+
+        System.out.println("Подбираем ключ, ждите...");
+        StatisticalAnalyzer statisticalAnalyzer = new StatisticalAnalyzer(inputFilePath, ALPHABET);
+        statisticalAnalyzer.analyzeText();
     }
 
     //gets secret algorithm key from console
@@ -163,7 +176,8 @@ public class Cryptanalizer {
                         //decryption way from stream
                     } else if (charOffset < 0) {
                         if (Character.isUpperCase(ch)) {
-                            writer.write(Character.toUpperCase(ALPHABET.charAt(ALPHABET.length() - Math.abs(charOffset % ALPHABET.length()))));
+                            writer.write(Character.toUpperCase(ALPHABET.charAt(ALPHABET.length() -
+                                    Math.abs(charOffset % ALPHABET.length()))));
                         } else {
                             writer.write(ALPHABET.charAt(ALPHABET.length() - Math.abs(charOffset % ALPHABET.length())));
                         }
