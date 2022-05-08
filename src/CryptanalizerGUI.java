@@ -6,8 +6,17 @@ import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
-
+import java.util.Map;
 import javax.swing.*;
+
+/**
+ * Cryptanalizer GUI
+ * Encrypts and decrypts the provided text with Caesar's algorithm from the provided ALPHABET.
+ * Selects an encryption key for the encrypted text based on the provided ALPHABET.
+ *
+ * @author Tsebal
+ * @since 0.12b
+ */
 
 public class CryptanalizerGUI {
     private static String inputFile;
@@ -56,21 +65,25 @@ public class CryptanalizerGUI {
         keyField.setPreferredSize(new Dimension(50, 25));
         setNumericOnly(keyField);           //checks only digits are entered by user
 
-        //contains 3 buttons for encryption/decryption/bruteforcing
-        JPanel panelThreeBtns = new JPanel();
-        panelThreeBtns.setLayout(new FlowLayout(FlowLayout.CENTER));
+        //contains 4 buttons for encryption/decryption/bruteforcing
+        JPanel panelFourBtns = new JPanel();
+        panelFourBtns.setLayout(new FlowLayout(FlowLayout.CENTER));
         JButton btnEncrypt = new JButton("Encrypt");
         btnEncrypt.setPreferredSize(new Dimension(100, 25));
         JButton btnDecrypt = new JButton("Decrypt");
         btnDecrypt.setPreferredSize(new Dimension(100, 25));
         JButton btnBruteForce = new JButton("BruteForce");
         btnBruteForce.setPreferredSize(new Dimension(100, 25));
+        JButton btnStatAnalysis = new JButton("StatAnalysis");
+        btnStatAnalysis.setPreferredSize(new Dimension(105, 25));
         //initialize action for btnEncrypt (method =0 for encryption)
         btnEncryptInitializer(btnEncrypt, keyField, frame, 0);
         //initialize action for btnDecrypt (method =1 for decryption)
         btnEncryptInitializer(btnDecrypt, keyField, frame, 1);
-        //initialize action for btnBruteForce
+        //initialize action for btnBruteForce (BruteForce method)
         btnBruteForceInitializer(btnBruteForce, keyField, frame);
+        //initialize action for btnStatAnalysis (Statistical Analyze method)
+        btnStatAnalysisInitializer(btnStatAnalysis, keyField, frame);
 
         //prepare panels and frame
         panel1.add(btnOpenFile);
@@ -79,14 +92,15 @@ public class CryptanalizerGUI {
         panel2.add(labelBtnSave);
         panel3.add(labelKey);
         panel3.add(keyField);
-        panelThreeBtns.add(btnEncrypt);
-        panelThreeBtns.add(btnDecrypt);
-        panelThreeBtns.add(btnBruteForce);
+        panelFourBtns.add(btnEncrypt);
+        panelFourBtns.add(btnDecrypt);
+        panelFourBtns.add(btnBruteForce);
+        panelFourBtns.add(btnStatAnalysis);
 
         frame.getContentPane().add(panel1, BorderLayout.NORTH);
         frame.getContentPane().add(panel2, BorderLayout.BEFORE_LINE_BEGINS);
         frame.getContentPane().add(panel3);
-        frame.getContentPane().add(panelThreeBtns, BorderLayout.SOUTH);
+        frame.getContentPane().add(panelFourBtns, BorderLayout.SOUTH);
     }
 
     //initializes action for btnOpenFile
@@ -149,7 +163,7 @@ public class CryptanalizerGUI {
         });
     }
 
-    //initializes action for btnBruteForce
+    //initializes action for btnBruteForce (BruteForce method)
     public static void btnBruteForceInitializer(JButton jButton, JTextField keyField, JFrame frame) {
         jButton.addActionListener(new ActionListener() {
             @Override
@@ -163,8 +177,8 @@ public class CryptanalizerGUI {
                         keyField.setText(String.valueOf(key));      //sets cipher key into keyField
                         JOptionPane.showMessageDialog(frame,
                                 "Encryption key found = " + key +
-                                        "\n Please press Save to file button and Decrypt button to save result.",
-                                "Result",
+                                        "\n Please press \"Save to file\" button and \"Decrypt\" button to save result.",
+                                "BruteForce method result",
                                 1);
                     } catch (IOException e1) {
                         e1.printStackTrace();
@@ -172,6 +186,44 @@ public class CryptanalizerGUI {
                 } else {
                     JOptionPane.showMessageDialog(frame,
                             "Please select the source file to brute force them.\n" +
+                                    "Or the information encoded in the input file is not logical text.",
+                            "Warning",
+                            2);
+                }
+            }
+        });
+    }
+
+    //initialize action for btnStatAnalysis (Statistical Analyze method)
+    public static void btnStatAnalysisInitializer(JButton jButton, JTextField keyField, JFrame frame) {
+        jButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                //if the input file is present, initialize statisticalAnalyzer
+                //pass the path to the encrypted file and the alphabet
+                if (inputFile != null) {
+                    StatisticalAnalyzer statisticalAnalyzer = new StatisticalAnalyzer(
+                            Paths.get(inputFile),
+                            Cryptanalizer.ALPHABET);
+                    try {
+                        //add the analysis results to the map
+                        Map<Integer, String> resultMap = statisticalAnalyzer.analyzeText();
+                        String showResult = "";
+                        for (Map.Entry<Integer, String> key : resultMap.entrySet()) {
+                            showResult += "Cipher key = " + key.getKey() + " Decrypted text snippet: " + key.getValue() + "\n";
+                        }
+                        JOptionPane.showMessageDialog(frame,
+                                showResult +
+                                        "\nPlease press \"Save to file\" button then \"Decrypt\" button " +
+                                        "and enter preferred Cipher key to save result.",
+                                "Statistical analysis result",
+                                1);
+                    } catch (IOException e1) {
+                        e1.printStackTrace();
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(frame,
+                            "Please specify the input file for key matching by statistical analysis.\n" +
                                     "Or the information encoded in the input file is not logical text.",
                             "Warning",
                             2);
