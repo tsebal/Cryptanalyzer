@@ -1,6 +1,7 @@
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.Scanner;
 
 /**
@@ -15,6 +16,8 @@ import java.util.Scanner;
 public class Cryptanalizer {
     private static final String INCORRECT_PATH_MSG = "Некорректный путь к файлу, введите корректный путь:";
     private static final String ERROR_MSG = "Возникла непредвиденная ошибка. Перезапустите программу.";
+    private static final String CHOOSE_ITEM_DECRYPT = "Пожалуйста выберите пункт \"2) Дешифровать текст\" " +
+                        "для полной расшифровки текста и укажите ключ, где пример расшифровки текста читаем.";
     public static final String ALPHABET = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя.,\":-!? ";
 
     public static void main(String[] args) {
@@ -59,6 +62,7 @@ public class Cryptanalizer {
         System.out.println("Шифруем содержимое исходного файла в \n" + outputFilePath.toString());
         String result = encryptorDecryptor(inputFilePath, outputFilePath, k, 0);
         System.out.println(result);
+        pressAnyKeyToContinue();
     }
 
     //method decrypts entered file to output file with key
@@ -74,6 +78,7 @@ public class Cryptanalizer {
         System.out.println("Расшифровываем содержимое исходного файла в \n" + outputFilePath.toString());
         String result = encryptorDecryptor(inputFilePath, outputFilePath, k, 1);
         System.out.println(result);
+        pressAnyKeyToContinue();
     }
 
     //Finds the encryption key by direct selection of the key to the encrypted text
@@ -84,6 +89,8 @@ public class Cryptanalizer {
         System.out.println("Подбираем ключ, ждите...");
         BruteForceCipher bruteForceCipher = new BruteForceCipher(inputFilePath, ALPHABET);
         bruteForceCipher.findKey();
+        System.out.println(CHOOSE_ITEM_DECRYPT);
+        pressAnyKeyToContinue();
     }
 
     //Searches the key by the number of repetitions of frequently used letters in the presented alphabet
@@ -93,8 +100,15 @@ public class Cryptanalizer {
         Path inputFilePath = pathResolver("input");
 
         System.out.println("Подбираем ключ, ждите...");
+        //pass the path to the encrypted file and the alphabet, add the analysis results to the map
         StatisticalAnalyzer statisticalAnalyzer = new StatisticalAnalyzer(inputFilePath, ALPHABET);
-        statisticalAnalyzer.analyzeText();
+        Map<Integer, String> resultMap = statisticalAnalyzer.analyzeText();
+        for (Map.Entry<Integer, String> key : resultMap.entrySet()) {
+            System.out.println("Ключ = " + key.getKey() + " Отрывок расшифрованный текста: " + key.getValue());
+        }
+        System.out.println();
+        System.out.println(CHOOSE_ITEM_DECRYPT);
+        pressAnyKeyToContinue();
     }
 
     //gets secret algorithm key from console
@@ -196,5 +210,16 @@ public class Cryptanalizer {
             e.printStackTrace();
         }
         return "Operation successfully completed.\n The result is saved in " + outputFile.toString();
+    }
+
+    //waiting for the Enter key to continue
+    private static void pressAnyKeyToContinue() {
+        System.out.println("Нажмите клавишу Enter для продолжения...");
+        try {
+            System.in.read();
+        }
+        catch(Exception e) {
+
+        }
     }
 }

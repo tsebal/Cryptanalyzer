@@ -63,10 +63,12 @@ public class BruteForceCipher {
         //The encryption key you are looking for
         int key = 0;
         //calculate the key from the founded variants with natural text criteria
-        for (int i = 0; i < decryptedText.length; i++) {
+        for (int i = decryptedText.length - 1; i > 0; i--) {
             key = alphabet.length - i;
+            //Shows the key and a snippet of decrypted text
             if (decryptedText[i].contains(". ") && decryptedText[i].contains(", ")) {
-                System.out.println("Ключ подобран! Ключ = " + key + "\n");
+                System.out.println("Ключ подобран! Ключ = " + key);
+                System.out.println("Отрывок расшифрованного текста:\n" + decryptedText[i].substring(0, 64) + "\n");
                 break;
             } else {
                 System.out.print("Ключ = " + key + " не подходит. " +
